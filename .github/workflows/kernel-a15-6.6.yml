@@ -155,7 +155,7 @@ jobs:
       matrix:
         include:
           - sub_level: "118"
-            os_patch_level: "2026-08"
+            os_patch_level: "2026-07"
     uses: ./.github/workflows/build-ksu-next.yml
     with:
       android_version: android15
