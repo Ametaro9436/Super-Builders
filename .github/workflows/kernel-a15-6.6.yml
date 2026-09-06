@@ -169,7 +169,7 @@ jobs:
       add_overlayfs_support: ${{ inputs.add_overlayfs_support }}
       add_kpm: ${{ inputs.add_kpm }}
       sukisu_commit: ${{ inputs.sukisu_commit }}
-      device_codename: ${{ inputs.device_codename }} #
+      device_codename: "generic" #
 
   build-resukisu:
     needs: [download-dependencies]
