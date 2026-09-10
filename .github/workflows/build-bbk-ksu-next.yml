@@ -52,6 +52,19 @@ on:
         description: "KernelSU-Next commit (empty = pinned default)"
         type: string
         default: ""
+      gki_tag:
+        description: "Stock GKI tag (must match device KMI/build fingerprint)"
+        type: string
+        required: true
+        default: "android15-6.6"
+      ksu_next_variant:
+        description: "KernelSU-Next variant"
+        type: choice
+        required: true
+        options:
+          - normal
+          - spoof
+        default: spoof
   workflow_call:
     inputs:
       device:
@@ -87,6 +100,12 @@ on:
       sukisu_commit:
         type: string
         default: ""
+      gki_tag:
+        type: string
+        default: "android15-6.6"
+      ksu_next_variant:
+        type: string
+        default: spoof
 
 jobs:
   download-dependencies:
@@ -137,6 +156,8 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Parse Device Registry
+      env:
+        GKI_TAG_INPUT: ${{ inputs.gki_tag }}
       run: |
         REGISTRY="$GITHUB_WORKSPACE/.github/inputs/bbk-devices.json"
         if [ ! -f "$REGISTRY" ]; then
@@ -188,7 +209,9 @@ jobs:
           exit 1
         fi
         # Extract GKI prefix for patch filenames (e.g., android15-6.6 from VERSION_DIR)
-        GKI_TAG="${VERSION_DIR}"
+        # Allow the workflow_dispatch `gki_tag` input to override this when the
+        # device's stock GKI tag differs from the nominal VERSION_DIR (KMI matching).
+        GKI_TAG="${GKI_TAG_INPUT:-$VERSION_DIR}"
 
         {
           echo "BRAND=$BRAND"
@@ -309,6 +332,7 @@ jobs:
       env:
         SUKISU_COMMIT: ${{ inputs.sukisu_commit }}
         SUSFS_BRANCH: ${{ inputs.susfs_branch }}
+        KSU_NEXT_VARIANT: ${{ inputs.ksu_next_variant }}
       run: |
         BRANCH="${SUSFS_BRANCH:-stable}"
         curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/stable/kernel/setup.sh" | bash -s "$BRANCH"
@@ -320,6 +344,17 @@ jobs:
           git fetch origin
           git checkout "$PIN"
           echo "Pinned KernelSU-Next to $(git rev-parse --short=7 HEAD)"
+        fi
+
+        # Optional spoof patch set for KernelSU-Next (KSU_NEXT_VARIANT=spoof)
+        if [ "$KSU_NEXT_VARIANT" = "spoof" ]; then
+          SPOOF_PATCH="$GITHUB_WORKSPACE/$VERSION_DIR/KernelSU-Next/patches/71_ksu_next_spoof.patch"
+          if [ -f "$SPOOF_PATCH" ]; then
+            patch -p1 -d "$KERNEL_COMMON/$KSU_DIR" --no-backup-if-mismatch < "$SPOOF_PATCH"
+            echo "Applied KernelSU-Next spoof patch"
+          else
+            echo "No spoof patch found at $SPOOF_PATCH, skipped"
+          fi
         fi
 
     - name: Fix Old Kernel Compatibility
@@ -354,6 +389,15 @@ jobs:
       working-directory: ${{ env.KERNEL_COMMON }}
       run: |
         patch -p1 -F3 --no-backup-if-mismatch < "$GITHUB_WORKSPACE/$VERSION_DIR/KernelSU-Next/patches/60_zeromount-${GKI_TAG}.patch"
+
+        # Force-enable ZeroMount runtime flags (non-fatal if file/pattern missing)
+        SUS_SU_FILE="fs/susfs/sus_su.c"
+        if [ -f "$SUS_SU_FILE" ]; then
+          sed -i 's/^#\?\s*#define\s\+ZERO_MOUNT_VFS_DRIVER.*/#define ZERO_MOUNT_VFS_DRIVER 1/g' "$SUS_SU_FILE" || true
+          sed -i 's/^#\?\s*#define\s\+ZERO_MOUNT_KSTAT_REDIRECT.*/#define ZERO_MOUNT_KSTAT_REDIRECT 1/g' "$SUS_SU_FILE" || true
+        else
+          echo "$SUS_SU_FILE not found, skipping ZeroMount flag enablement"
+        fi
 
     - name: Fix SUSFS Compatibility
       if: inputs.add_susfs
