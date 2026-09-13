@@ -240,3 +240,8 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 <p align="center">
   <b>⚡ The kernel infrastructure behind 👻 GHOST mode.</b>
 </p>
+## Stability Docs
+
+- [Stable Profile](docs/STABLE_PROFILE.md)
+- [Recovery Quickstart](docs/RECOVERY_QUICKSTART.md)
+- [Run Log Template](docs/RUN_LOG_TEMPLATE.md)
