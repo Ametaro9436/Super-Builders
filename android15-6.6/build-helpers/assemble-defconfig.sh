@@ -26,11 +26,22 @@ extract_section() {
   awk "/^# \\[$1\\]/{found=1; next} /^# \\[/{found=0} found && NF" "$FRAGMENT_SRC"
 }
 
+has_config_symbol() {
+  local symbol="${1:?}"
+  grep -Rqx "config ${symbol}" common/ KernelSU-Next/ --include='Kconfig*' 2>/dev/null
+}
+
 extract_section "base" >> "$FRAGMENT_DST"
 $ADD_SUSFS && extract_section "susfs" >> "$FRAGMENT_DST"
 $ADD_OVERLAYFS && extract_section "overlayfs" >> "$FRAGMENT_DST"
 $ADD_ZRAM && extract_section "zram" >> "$FRAGMENT_DST"
-$ADD_KPM && extract_section "kpm" >> "$FRAGMENT_DST"
+if $ADD_KPM; then
+  if has_config_symbol "KPM"; then
+    extract_section "kpm" >> "$FRAGMENT_DST"
+  else
+    echo "WARN: CONFIG_KPM not found in Kconfig, skipping [kpm] fragment section" >&2
+  fi
+fi
 
 # dedup fragment: last-wins per CONFIG_ key
 tac "$FRAGMENT_DST" | awk -F= '/^CONFIG_/{if(seen[$1]++)next} {print}' | tac > "${FRAGMENT_DST}.tmp"
