@@ -52,6 +52,7 @@ on:
         options:
           - generic
           - lake
+          - frankel
         default: "lake"
   workflow_call:
     inputs:
@@ -131,6 +132,8 @@ jobs:
             os_patch_level: "2025-10"
           - sub_level: "118"
             os_patch_level: "2026-01"
+          - sub_level: "118"
+            os_patch_level: "2026-08"
     uses: ./.github/workflows/build-sukisu.yml
     with:
       android_version: android15
@@ -187,6 +190,8 @@ jobs:
             os_patch_level: "2025-10"
           - sub_level: "118"
             os_patch_level: "2026-01"
+          - sub_level: "118"
+            os_patch_level: "2026-08"
     uses: ./.github/workflows/build-ksu-next.yml
     with:
       android_version: android15
@@ -243,6 +248,8 @@ jobs:
             os_patch_level: "2025-10"
           - sub_level: "118"
             os_patch_level: "2026-01"
+          - sub_level: "118"
+            os_patch_level: "2026-08"
     uses: ./.github/workflows/build-resukisu.yml
     with:
       android_version: android15
@@ -299,6 +306,8 @@ jobs:
             os_patch_level: "2025-10"
           - sub_level: "118"
             os_patch_level: "2026-01"
+          - sub_level: "118"
+            os_patch_level: "2026-08"
     uses: ./.github/workflows/build-wksu.yml
     with:
       android_version: android15
