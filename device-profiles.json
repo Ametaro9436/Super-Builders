@@ -1,0 +1,22 @@
+{
+  "devices": {
+    "frankel": {
+      "android_version": "android15",
+      "kernel_version": "6.6",
+      "sub_level": "118",
+      "stock_kernel": {
+        "release": "-android15-8-g1831c2a45d9b-ab15739706-4k",
+        "version_string": "#1 SMP PREEMPT Sat Jun 27 00:52:22 UTC 2026",
+        "build_user": "root",
+        "build_host": "localhost",
+        "compiler_info": ""
+      },
+      "notes": {
+        "build_id": "CP2A.260805.005",
+        "incremental": "15828068",
+        "security_patch": "2026-08-05",
+        "fingerprint": "google/frankel/frankel:17/CP2A.260805.005/15828068:user/release-keys"
+      }
+    }
+  }
+}
